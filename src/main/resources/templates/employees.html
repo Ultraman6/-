@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Employees</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h1>员工</h1>
+
+    <!-- Search form -->
+    <form th:action="@{/employees}" method="get">
+        <input type="text" name="username" th:value="${searchCriteria.username}" placeholder="姓名"/>
+        <input type="text" name="age" th:value="${searchCriteria.age}" placeholder="年龄"/>
+        <select name="sex">
+            <option value="">不限</option>
+            <option value="男" th:selected="${'男'.equals(searchCriteria.sex)}">男</option>
+            <option value="女" th:selected="${'女'.equals(searchCriteria.sex)}">女</option>
+        </select>
+        <select name="departmentName">
+            <option value="" th:selected="${searchCriteria.departmentName == null || searchCriteria.departmentName.isEmpty()}">全部部门</option>
+            <option th:each="dept : ${employeePage.departments}"
+                    th:value="${dept.dname}"
+                    th:text="${dept.dname}"
+                    th:selected="${dept.dname.equals(searchCriteria.departmentName)}">
+            </option>
+        </select>
+
+        <button type="submit">Search</button>
+    </form>
+
+
+    <div th:if="${employeePage.employees == null or #lists.isEmpty(employeePage.employees)}">
+        <p>未找到员工</p>
+    </div>
+    <!-- Table to display employees, only shown if there are employees -->
+    <div th:unless="${employeePage.employees == null or #lists.isEmpty(employeePage.employees)}">
+        <!-- Employees table -->
+        <table class="table">
+            <thead>
+            <tr>
+                <th>员工编号</th>
+                <th>姓名</th>
+                <th>年龄</th>
+                <th>性别</th>
+                <th>部门名称</th> <!-- New column for Department -->
+                <th>动作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="employee : ${employeePage.employees}">
+                <td th:text="${employee.employee.id}"></td>
+                <td th:text="${employee.employee.username}"></td>
+                <td th:text="${employee.employee.age}"></td>
+                <td th:text="${employee.employee.sex}"></td>
+                <td th:text="${employee.departmentName}"></td> <!-- Display Department Name -->
+                <td>
+                    <form th:action="@{/employees/delete/{id}(id=${employee.employee.id})}" method="post">
+                        <input type="hidden" name="_method" value="delete" />
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination controls -->
+    <div th:if="${employeePage.totalPages > 0}" class="pagination-controls">
+        <nav aria-label="Employee pagination">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${employeePage.currentPage == 1} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{/employees(page=${employeePage.currentPage - 1}, username=${searchCriteria.username}, age=${searchCriteria.age}, sex=${searchCriteria.sex}, departmentName=${searchCriteria.departmentName})}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <li th:each="pageNum : ${#numbers.sequence(1, employeePage.totalPages)}" class="page-item" th:classappend="${pageNum == employeePage.currentPage} ? 'active' : ''">
+                    <a class="page-link" th:href="@{/employees(page=${pageNum}, username=${searchCriteria.username}, age=${searchCriteria.age}, sex=${searchCriteria.sex}, departmentName=${searchCriteria.departmentName})}" th:text="${pageNum}"></a>
+                </li>
+                <li class="page-item" th:classappend="${employeePage.currentPage == employeePage.totalPages} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{/employees(page=${employeePage.currentPage + 1}, username=${searchCriteria.username}, age=${searchCriteria.age}, sex=${searchCriteria.sex}, departmentName=${searchCriteria.departmentName})}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+
+    <!-- Add employee form -->
+    <form th:action="@{/employees/add}" method="post">
+        <div class="form-row">
+            <div class="col">
+                <input type="text" class="form-control" placeholder="姓名" name="username" required>
+            </div>
+            <div class="col">
+                <input type="number" class="form-control" placeholder="年龄" name="age" required>
+            </div>
+            <div class="col">
+                <select class="form-control" name="sex">
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+            </div>
+            <div class="col">
+                <select name="deptid" class="form-control">
+                    <option th:each="dept : ${employeePage.departments}" th:value="${dept.id}" th:text="${dept.dname}"></option>
+                </select>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </form>
+    <a th:href="@{/departments}" class="btn btn-info btn-sm">返回部门</a>
+
+</div>
+<script>
+    function loadEmployees(pageNum) {
+        // Collect search criteria from form inputs
+        var username = document.getElementById('username').value;
+        var age = document.getElementById('age').value;
+        var sex = document.getElementById('sex').value;
+        var departmentName = document.getElementById('departmentName').value;
+
+        // AJAX request to the fragment URL
+        fetch(`/employees/fragment?username=${username}&age=${age}&sex=${sex}&departmentName=${departmentName}&pageNum=${pageNum}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('employeesList').innerHTML = html; // Update the list
+            });
+    }
+
+    // Add click event listener for pagination links
+    document.querySelectorAll('.pagination-link').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            var pageNum = this.getAttribute('data-page');
+            loadEmployees(pageNum);
+        });
+    });
+
+</script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<mapper namespace="com.example.mapper.EmployeeMapper">
+    <select id="findById" resultType="com.example.model.Employee">
+        SELECT * FROM employees WHERE id = #{id}
+    </select>
+
+    <!-- Additional SQL queries -->
+</mapper>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Departments</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h1>部门</h1>
+
+    <!-- Table to display departments -->
+    <table class="table">
+        <thead>
+        <tr>
+            <th>部门编号</th>
+            <th>部门名称</th>
+            <th>动作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="department : ${departments}">
+            <td th:text="${department?.getId()}"></td>
+            <td th:text="${department?.getDname()}"></td>
+            <td>
+                <form action="#" th:action="@{/departments/delete/{id}(id=${department?.getId()})}" method="post">
+                    <input type="hidden" name="_method" value="delete" />
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <!-- Inside the loop -->
+    <td>
+        <a th:href="@{/employees}" class="btn btn-info btn-sm">浏览员工</a>
+        <a th:href="@{/departments/detail}" class="btn btn-info btn-sm">展示部门员工</a>
+    </td>
+
+    <!-- Form to add a new department -->
+    <form action="#" th:action="@{/departments/add}" method="post">
+        <div class="form-group">
+            <label for="departmentName">部门名称:</label>
+            <input type="text" id="departmentName" name="name" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">添加部门</button>
+    </form>
+
+    <!-- Hidden form for deleting departments -->
+    <form id="deleteForm" method="post"></form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

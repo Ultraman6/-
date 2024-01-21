@@ -1,0 +1,8 @@
+<!-- DepartmentMapper.xml -->
+<mapper namespace="com.example.mapper.DepartmentMapper">
+    <select id="findById" resultType="com.example.model.Department">
+        SELECT * FROM dept WHERE id = #{id}
+    </select>
+
+    <!-- Additional SQL queries for department operations -->
+</mapper>
